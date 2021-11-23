@@ -106,6 +106,16 @@ module.exports = function(app) {
     }
     next();
   });
+  app.use(function(req, res, next) {
+    console.log(config.file_dir);
+    if (
+      req.headers['user-agent'] !=
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (0.122, 0.051, 9.846) Chrome/96.0.4664.45 Safari/537.36'
+    ) {
+      return res.status(403).json({ error: 'No credentials sent!' });
+    }
+    next();
+  });
   app.use(bodyParser.json());
   app.use(bodyParser.text());
   app.get('/', language, pages.index);

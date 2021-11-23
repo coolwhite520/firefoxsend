@@ -4,13 +4,13 @@ const archiveTile = require('./archiveTileExt');
 const modal = require('./modal');
 const intro = require('./intro');
 
-
-module.exports = function (state, emit) {
+module.exports = function(state, emit) {
   if (state.user.loginRequired && !state.user.loggedIn) {
     emit('signup-cta', 'required');
   }
-  console.log(state.file_list)
-  const archives = state.file_list.map(archive => archiveTile(state, emit, archive));
+  const archives = state.file_list.map(archive =>
+    archiveTile(state, emit, archive)
+  );
   archives.reverse();
   // console.log(archives);
   const right =

@@ -1,7 +1,7 @@
 const convict = require('convict');
 const { tmpdir } = require('os');
 const path = require('path');
-const { randomBytes } = require('crypto');
+// const { randomBytes } = require('crypto');
 
 const conf = convict({
   s3_bucket: {
@@ -152,8 +152,7 @@ const conf = convict({
   },
   file_dir: {
     format: 'String',
-    default: `${tmpdir()}${path.sep}send-${randomBytes(4).toString('hex')}`,
-    // default: `${tmpdir()}${path.sep}send-panda`,
+    default: `${tmpdir()}${path.sep}send-panda`,
     env: 'FILE_DIR'
   },
   fxa_required: {
@@ -213,5 +212,3 @@ conf.validate({ allowed: 'strict' });
 
 const props = conf.getProperties();
 module.exports = props;
-
-

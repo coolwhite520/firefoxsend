@@ -168,7 +168,19 @@ module.exports = function(state, emit, archive) {
       id="archive-${archive.id}"
       class="flex flex-col items-start rounded shadow-light bg-white p-4 w-full dark:bg-grey-90 dark:border dark:border-grey-70"
     >
-      ${archiveInfo(archive, html``)}
+      ${archiveInfo(
+        archive,
+        html`
+          <input
+            type="image"
+            class="self-start flex-shrink-0 text-white hover:opacity-75 focus:outline"
+            alt="${state.translate('deleteButtonHover')}"
+            title="${state.translate('deleteButtonHover')}"
+            src="${assets.get('close-16.svg')}"
+            onclick=${del}
+          />
+        `
+      )}
       <div class="text-sm opacity-75 w-full mt-2 mb-2">
         ${expiryInfo(state.translate, archive)}
       </div>
@@ -189,6 +201,11 @@ module.exports = function(state, emit, archive) {
       () => (text.textContent = state.translate('copyLinkButton')),
       1000
     );
+  }
+
+  function del(event) {
+    event.stopPropagation();
+    emit('reciverDelete', archive);
   }
 };
 

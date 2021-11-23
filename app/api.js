@@ -121,34 +121,25 @@ export async function fileInfo(id, owner_token) {
 export async function extInfo(id, owner_token, obj) {
   const response = await fetch(
     getApiUrl(`/api/ext/${id}`),
-    post({owner_token, ...obj})
+    post({ owner_token, ...obj })
   );
   return response.status;
 }
 
 export async function deleteItem(id) {
-  const response = await fetch(
-    getApiUrl(`/api/delete/${id}`),
-    post({})
-  );
+  const response = await fetch(getApiUrl(`/api/delete/${id}`), post({}));
   return response.status;
 }
 
-
 // 从redis获取分享列表
 export async function getList() {
-  const response = await fetch(
-    getApiUrl(`/api/list/`),
-    post({})
-  );
+  const response = await fetch(getApiUrl(`/api/list/`), post({}));
   if (response.ok) {
     const obj = await response.json();
-
     return obj;
   }
   throw new Error(response.status);
 }
-
 
 export async function metadata(id, keychain) {
   const result = await fetchWithAuthAndRetry(

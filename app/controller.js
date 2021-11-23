@@ -6,7 +6,7 @@ import { bytes, locale } from './utils';
 import okDialog from './ui/okDialog';
 import copyDialog from './ui/copyDialog';
 import shareDialog from './ui/shareDialog';
-import {getList, deleteItem} from "./api";
+import { getList, deleteItem } from './api';
 
 export default function(state, emitter) {
   let lastRender = 0;
@@ -82,6 +82,19 @@ export default function(state, emitter) {
       state.storage.remove(ownedFile.id);
       await ownedFile.del();
       await deleteItem(ownedFile.id);
+    } catch (e) {
+      state.sentry.captureException(e);
+    }
+    render();
+  });
+
+  emitter.on('reciverDelete', async ownedFile => {
+    try {
+      let ret = await deleteItem(ownedFile.id);
+      console.log(ret);
+      if (ret == 200) {
+        await getFileList();
+      }
     } catch (e) {
       state.sentry.captureException(e);
     }
@@ -333,12 +346,11 @@ export default function(state, emitter) {
     if (!state.modal && state.route === '/') {
       checkFiles();
     }
-  }, 2 * 60 * 1000);
+  }, 10 * 1000);
 
-  setInterval( () => {
+  setInterval(() => {
     // poll for updates of the upload list
     getFileList();
-    console.log(state)
   }, 10 * 1000);
 
   setInterval(() => {
