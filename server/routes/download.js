@@ -8,6 +8,8 @@ module.exports = async function(req, res) {
     await storage.setField(id, 'dtotal', newValue);
     if (dlimit <= dtotal) {
       await storage.del(id);
+      res.sendStatus(404);
+      return;
     }
 
     const { length, stream } = await storage.get(id);

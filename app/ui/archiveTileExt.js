@@ -1,16 +1,7 @@
-/* global Android */
-
 const html = require('choo/html');
 const raw = require('choo/html/raw');
 const assets = require('../../common/assets');
-const {
-  bytes,
-  copyToClipboard,
-  list,
-  percent,
-  platform,
-  timeLeft
-} = require('../utils');
+const { bytes, copyToClipboard, list, percent, timeLeft } = require('../utils');
 const expiryOptions = require('./expiryOptions');
 
 function expiryInfo(translate, archive) {
@@ -142,94 +133,42 @@ function archiveInfo(archive, action) {
 }
 
 function archiveDetails(translate, archive) {
+  console.log(translate, archive);
   return '';
-  if (archive.manifest.files.length > 1) {
-    return html`
-      <details
-        class="w-full pb-1"
-        ${archive.open ? 'open' : ''}
-        ontoggle="${toggled}"
-      >
-        <summary
-          class="flex items-center link-blue text-sm cursor-pointer outline-none"
-        >
-          <svg
-            class="fill-current w-4 h-4 mr-1"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-          >
-            <path
-              d="M12.95 10.707l.707-.707L8 4.343 6.586 5.757 10.828 10l-4.242 4.243L8 15.657l4.95-4.95z"
-            />
-          </svg>
-          ${translate('fileCount', {
-            num: archive.manifest.files.length
-          })}
-        </summary>
-        ${list(archive.manifest.files.map(f => fileInfo(f)))}
-      </details>
-    `;
-  }
-  function toggled(event) {
-    event.stopPropagation();
-    archive.open = event.target.open;
-  }
 }
 
 module.exports = function(state, emit, archive) {
-  const copyOrShare =
-    state.capabilities.share || platform() === 'android'
-      ? html`
-          <button
-            class="link-blue self-end flex items-start"
-            onclick=${share}
-            title="Share link"
-          >
-            <svg class="h-4 w-4 mr-2">
-              <use xlink:href="${assets.get('share-24.svg')}#icon" />
-            </svg>
-            Share link
-          </button>
-        `
-      : html`
-          <button
-            class="link-blue focus:outline self-end flex items-center"
-            onclick=${copy}
-            title="${state.translate('copyLinkButton')}"
-          >
-            <svg class="h-4 w-4 mr-2">
-              <use xlink:href="${assets.get('copy-16.svg')}#icon" />
-            </svg>
-            ${state.translate('copyLinkButton')}
-          </button>
-        `;
-  const dl =
-    platform() === 'web'
-      ? html`
-          <a
-            class="flex items-baseline link-blue"
-            href="${archive.url}"
-            title="${state.translate('downloadButtonLabel')}"
-            tabindex="0"
-          >
-            <svg class="h-4 w-3 mr-2">
-              <use xlink:href="${assets.get('dl.svg')}#icon" />
-            </svg>
-            ${state.translate('downloadButtonLabel')}
-          </a>
-        `
-      : html`
-          <div></div>
-        `;
+  const copyOrShare = html`
+    <button
+      class="link-blue focus:outline self-end flex items-center"
+      onclick=${copy}
+      title="${state.translate('copyLinkButton')}"
+    >
+      <svg class="h-4 w-4 mr-2">
+        <use xlink:href="${assets.get('copy-16.svg')}#icon" />
+      </svg>
+      ${state.translate('copyLinkButton')}
+    </button>
+  `;
+  const dl = html`
+    <a
+      class="flex items-baseline link-blue"
+      href="${archive.url}"
+      title="${state.translate('downloadButtonLabel')}"
+      tabindex="0"
+    >
+      <svg class="h-4 w-3 mr-2">
+        <use xlink:href="${assets.get('dl.svg')}#icon" />
+      </svg>
+      ${state.translate('downloadButtonLabel')}
+    </a>
+  `;
   return html`
     <send-archive
       id="archive-${archive.id}"
       class="flex flex-col items-start rounded shadow-light bg-white p-4 w-full dark:bg-grey-90 dark:border dark:border-grey-70"
     >
-      ${archiveInfo(
-        archive,
-        html``
-      )}
+      ${archiveInfo(archive, html``)}
       <div class="text-sm opacity-75 w-full mt-2 mb-2">
         ${expiryInfo(state.translate, archive)}
       </div>
@@ -250,29 +189,6 @@ module.exports = function(state, emit, archive) {
       () => (text.textContent = state.translate('copyLinkButton')),
       1000
     );
-  }
-
-  function del(event) {
-    event.stopPropagation();
-    emit('delete', archive);
-  }
-
-  async function share(event) {
-    event.stopPropagation();
-    if (platform() === 'android') {
-      Android.shareUrl(archive.url);
-    } else {
-      try {
-        await navigator.share({
-          title: state.translate('-send-brand'),
-          text: `Download "${archive.name}" with Firefox Send: simple, safe file sharing`,
-          //state.translate('shareMessage', { name }),
-          url: archive.url
-        });
-      } catch (e) {
-        // ignore
-      }
-    }
   }
 };
 
