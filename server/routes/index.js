@@ -1,20 +1,20 @@
-const crypto = require('crypto');
-const bodyParser = require('body-parser');
-const helmet = require('helmet');
-const uaparser = require('ua-parser-js');
-const storage = require('../storage');
-const config = require('../config');
-const auth = require('../middleware/auth');
-const language = require('../middleware/language');
-const pages = require('./pages');
-const filelist = require('./filelist');
-const clientConstants = require('../clientConstants');
+const crypto = require("crypto");
+const bodyParser = require("body-parser");
+const helmet = require("helmet");
+const uaparser = require("ua-parser-js");
+const storage = require("../storage");
+const config = require("../config");
+const auth = require("../middleware/auth");
+const language = require("../middleware/language");
+const pages = require("./pages");
+const filelist = require("./filelist");
+const clientConstants = require("../clientConstants");
 
-const IS_DEV = config.env === 'development';
-const ID_REGEX = '([0-9a-fA-F]{10,16})';
+const IS_DEV = config.env === "development";
+const ID_REGEX = "([0-9a-fA-F]{10,16})";
 
 module.exports = function(app) {
-  app.set('trust proxy', true);
+  app.set("trust proxy", true);
   app.use(helmet());
   app.use(
     helmet.hsts({
@@ -23,11 +23,11 @@ module.exports = function(app) {
     })
   );
   app.use(function(req, res, next) {
-    req.ua = uaparser(req.header('user-agent'));
+    req.ua = uaparser(req.header("user-agent"));
     next();
   });
   app.use(function(req, res, next) {
-    req.cspNonce = crypto.randomBytes(16).toString('hex');
+    req.cspNonce = crypto.randomBytes(16).toString("hex");
     next();
   });
   if (!IS_DEV) {
@@ -36,7 +36,7 @@ module.exports = function(app) {
         defaultSrc: ["'self'"],
         connectSrc: [
           "'self'",
-          config.base_url.replace(/^https:\/\//, 'wss://')
+          config.base_url.replace(/^https:\/\//, "wss://")
         ],
         imgSrc: ["'self'"],
         scriptSrc: [
@@ -48,14 +48,14 @@ module.exports = function(app) {
         formAction: ["'none'"],
         frameAncestors: ["'none'"],
         objectSrc: ["'none'"],
-        reportUri: '/__cspreport__'
+        reportUri: "/__cspreport__"
       }
     };
     if (config.fxa_client_id) {
-      csp.directives.connectSrc.push('https://accounts.firefox.com');
-      csp.directives.connectSrc.push('https://*.accounts.firefox.com');
-      csp.directives.imgSrc.push('https://firefoxusercontent.com');
-      csp.directives.imgSrc.push('https://secure.gravatar.com');
+      csp.directives.connectSrc.push("https://accounts.firefox.com");
+      csp.directives.connectSrc.push("https://*.accounts.firefox.com");
+      csp.directives.imgSrc.push("https://firefoxusercontent.com");
+      csp.directives.imgSrc.push("https://secure.gravatar.com");
     }
     if (config.sentry_id) {
       csp.directives.connectSrc.push(config.sentry_host);
@@ -66,19 +66,19 @@ module.exports = function(app) {
         config.base_url
       )
     ) {
-      csp.directives.connectSrc.push('https://*.dev.lcip.org');
-      csp.directives.imgSrc.push('https://*.dev.lcip.org');
+      csp.directives.connectSrc.push("https://*.dev.lcip.org");
+      csp.directives.imgSrc.push("https://*.dev.lcip.org");
     }
-    if (config.fxa_csp_oauth_url != '') {
+    if (config.fxa_csp_oauth_url != "") {
       csp.directives.connectSrc.push(config.fxa_csp_oauth_url);
     }
-    if (config.fxa_csp_content_url != '') {
+    if (config.fxa_csp_content_url != "") {
       csp.directives.connectSrc.push(config.fxa_csp_content_url);
     }
-    if (config.fxa_csp_profile_url != '') {
+    if (config.fxa_csp_profile_url != "") {
       csp.directives.connectSrc.push(config.fxa_csp_profile_url);
     }
-    if (config.fxa_csp_profileimage_url != '') {
+    if (config.fxa_csp_profileimage_url != "") {
       csp.directives.imgSrc.push(config.fxa_csp_profileimage_url);
     }
 
@@ -86,17 +86,17 @@ module.exports = function(app) {
   }
 
   app.use(function(req, res, next) {
-    res.set('Pragma', 'no-cache');
+    res.set("Pragma", "no-cache");
     res.set(
-      'Cache-Control',
-      'private, no-cache, no-store, must-revalidate, max-age=0'
+      "Cache-Control",
+      "private, no-cache, no-store, must-revalidate, max-age=0"
     );
     next();
   });
   app.use(function(req, res, next) {
     try {
       // set by the load balancer
-      const [country, state] = req.header('X-Client-Geo-Location').split(',');
+      const [country, state] = req.header("X-Client-Geo-Location").split(",");
       req.geo = {
         country,
         state
@@ -107,67 +107,67 @@ module.exports = function(app) {
     next();
   });
   app.use(function(req, res, next) {
-    console.log(config.file_dir);
+    console.log(req.headers["user-agent"]);
     if (
-      req.headers['user-agent'] !=
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (0.122, 0.051, 9.846) Chrome/96.0.4664.45 Safari/537.36'
+      req.headers["user-agent"] !=
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (0.122, 0.051, 9.846) Chrome/96.0.4664.45 Safari/537.36"
     ) {
-      return res.status(403).json({ error: 'No credentials sent!' });
+      return res.status(403).json({ error: "No credentials sent!" });
     }
     next();
   });
   app.use(bodyParser.json());
   app.use(bodyParser.text());
-  app.get('/', language, pages.index);
-  app.get('/config', function(req, res) {
+  app.get("/", language, pages.index);
+  app.get("/config", function(req, res) {
     res.json(clientConstants);
   });
-  app.get('/error', language, pages.blank);
-  app.get('/list', language, pages.blank);
-  app.get('/oauth', language, pages.blank);
-  app.get('/login', language, pages.index);
-  app.get('/report', language, pages.blank);
-  app.get('/app.webmanifest', language, require('./webmanifest'));
+  app.get("/error", language, pages.blank);
+  app.get("/list", language, pages.blank);
+  app.get("/oauth", language, pages.blank);
+  app.get("/login", language, pages.index);
+  app.get("/report", language, pages.blank);
+  app.get("/app.webmanifest", language, require("./webmanifest"));
   app.get(`/download/:id${ID_REGEX}`, language, pages.download);
-  app.get('/unsupported/:reason', language, pages.unsupported);
-  app.get(`/api/download/token/:id${ID_REGEX}`, auth.hmac, require('./token'));
-  app.get(`/api/download/:id${ID_REGEX}`, auth.dlToken, require('./download'));
+  app.get("/unsupported/:reason", language, pages.unsupported);
+  app.get(`/api/download/token/:id${ID_REGEX}`, auth.hmac, require("./token"));
+  app.get(`/api/download/:id${ID_REGEX}`, auth.dlToken, require("./download"));
   app.get(
     `/api/download/blob/:id${ID_REGEX}`,
     auth.dlToken,
-    require('./download')
+    require("./download")
   );
   app.post(
     `/api/download/done/:id${ID_REGEX}`,
     auth.dlToken,
-    require('./done.js')
+    require("./done.js")
   );
-  app.get(`/api/exists/:id${ID_REGEX}`, require('./exists'));
+  app.get(`/api/exists/:id${ID_REGEX}`, require("./exists"));
 
-  app.get(`/api/metadata/:id${ID_REGEX}`, auth.hmac, require('./metadata'));
-  app.get('/api/filelist/:id([\\w-]{16})', auth.fxa, filelist.get);
-  app.post('/api/filelist/:id([\\w-]{16})', auth.fxa, filelist.post);
+  app.get(`/api/metadata/:id${ID_REGEX}`, auth.hmac, require("./metadata"));
+  app.get("/api/filelist/:id([\\w-]{16})", auth.fxa, filelist.get);
+  app.post("/api/filelist/:id([\\w-]{16})", auth.fxa, filelist.post);
   // app.post('/api/upload', auth.fxa, require('./upload'));
-  app.post(`/api/delete/:id${ID_REGEX}`, require('./delete'));
-  app.post(`/api/password/:id${ID_REGEX}`, auth.owner, require('./password'));
-  app.post(`/api/params/:id${ID_REGEX}`, auth.owner, require('./params'));
-  app.post(`/api/info/:id${ID_REGEX}`, auth.owner, require('./info'));
+  app.post(`/api/delete/:id${ID_REGEX}`, require("./delete"));
+  app.post(`/api/password/:id${ID_REGEX}`, auth.owner, require("./password"));
+  app.post(`/api/params/:id${ID_REGEX}`, auth.owner, require("./params"));
+  app.post(`/api/info/:id${ID_REGEX}`, auth.owner, require("./info"));
   // 添加文件的分享信息
-  app.post(`/api/ext/:id${ID_REGEX}`, auth.owner, require('./ext'));
+  app.post(`/api/ext/:id${ID_REGEX}`, auth.owner, require("./ext"));
   // 获取所有分享列表
-  app.post(`/api/list`, require('./list'));
-  app.post(`/api/report/:id${ID_REGEX}`, auth.hmac, require('./report'));
-  app.post('/api/metrics', require('./metrics'));
-  app.get('/__version__', function(req, res) {
+  app.post(`/api/list`, require("./list"));
+  app.post(`/api/report/:id${ID_REGEX}`, auth.hmac, require("./report"));
+  app.post("/api/metrics", require("./metrics"));
+  app.get("/__version__", function(req, res) {
     // eslint-disable-next-line node/no-missing-require
-    res.sendFile(require.resolve('../../dist/version.json'));
+    res.sendFile(require.resolve("../../dist/version.json"));
   });
 
-  app.get('/__lbheartbeat__', function(req, res) {
+  app.get("/__lbheartbeat__", function(req, res) {
     res.sendStatus(200);
   });
 
-  app.get('/__heartbeat__', async (req, res) => {
+  app.get("/__heartbeat__", async (req, res) => {
     try {
       await storage.ping();
       res.sendStatus(200);
